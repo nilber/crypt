@@ -5,35 +5,43 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 )
 
 // Encrypt text with a known key
-func Encrypt(key, text []byte) ([]byte, error) {
+func Encrypt(_key, _text string) (string, error) {
+	key, _ := hex.DecodeString(_key)
+	text, _ := hex.DecodeString(_text)
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	b := base64.StdEncoding.EncodeToString(text)
 	ciphertext := make([]byte, aes.BlockSize+len(b))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
+		return "", err
 	}
 	cfb := cipher.NewCFBEncrypter(block, iv)
 	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
-	return ciphertext, nil
+	return fmt.Sprintf("%0x", ciphertext), nil
 }
 
 // Decrypt text with a known key
-func Decrypt(key, text []byte) ([]byte, error) {
+func Decrypt(_key, _text string) (string, error) {
+	key, _ := hex.DecodeString(_key)
+	text, _ := hex.DecodeString(_text)
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if len(text) < aes.BlockSize {
-		return nil, errors.New("ciphertext too short")
+		return "", errors.New("ciphertext too short")
 	}
 	iv := text[:aes.BlockSize]
 	text = text[aes.BlockSize:]
@@ -41,7 +49,7 @@ func Decrypt(key, text []byte) ([]byte, error) {
 	cfb.XORKeyStream(text, text)
 	data, err := base64.StdEncoding.DecodeString(string(text))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return data, nil
+	return string(data), nil
 }
