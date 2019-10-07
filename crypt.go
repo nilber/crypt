@@ -13,8 +13,8 @@ import (
 
 // Encrypt text with a known key
 func Encrypt(_key, _text string) (string, error) {
-	key, _ := hex.DecodeString(_key)
-	text, _ := hex.DecodeString(_text)
+	key := []byte(_key)
+	text := []byte(_text)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -33,7 +33,7 @@ func Encrypt(_key, _text string) (string, error) {
 
 // Decrypt text with a known key
 func Decrypt(_key, _text string) (string, error) {
-	key, _ := hex.DecodeString(_key)
+	key := []byte(_key)
 	text, _ := hex.DecodeString(_text)
 
 	block, err := aes.NewCipher(key)
